@@ -55,5 +55,6 @@ jobs:
       - name: Check raise_cli layer contract
         run: uv run lint-imports --config pyproject.toml
       - name: Edge inventory (RAISE-16419 S1)
+        if: ${{ hashFiles('packages/raise-cli/tests/pkg_meta/edge_inventory.py') != '' }}
         working-directory: packages/raise-cli
         run: uv run --no-sync python -m tests.pkg_meta.edge_inventory

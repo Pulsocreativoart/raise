@@ -4342,6 +4342,54 @@ async def pipeline_restore(run_id: str, cwd: str = "") -> str:  # noqa: C901
 
 
 @mcp.tool()
+async def pipeline_gate_status(run_id: str) -> str:
+    """Get the current persisted HITL gate state without mutating the run.
+
+    A gate is pending only when the current phase is an HITL gate and the
+    persisted ``metadata.awaiting_gate`` stamp names that same phase. Missing,
+    stale, and non-HITL stamps are reported as clear.
+
+    Args:
+        run_id: The run ID returned by pipeline_start.
+    """
+    store = get_run_store()
+    run = await store.load(run_id)
+    if run is None:
+        return json.dumps({"status": "error", "reason": f"Run {run_id} not found"})
+
+    idx: int = run["current_phase_index"]
+    phases = _get_phases(run)
+    current = phases[idx] if idx < len(phases) else None
+    current_phase = current["id"] if current is not None else "complete"
+    result: dict[str, Any] = {
+        "run_id": run_id,
+        "pipeline": run["pipeline_name"],
+        "issue": run["issue_id"],
+        "current_phase": current_phase,
+        "status": "clear",
+        "gate": None,
+    }
+
+    stamp = run.get("metadata", {}).get("awaiting_gate")
+    if (
+        current is not None
+        and current.get("gate_type") == "hitl"
+        and isinstance(stamp, dict)
+        and stamp.get("phase") == current_phase
+    ):
+        result["status"] = "gate_pending"
+        result["gate"] = {
+            "type": "hitl",
+            "phase": current_phase,
+            "status": "pending",
+            "entered_at": stamp.get("entered_at"),
+            "last_checked_at": stamp.get("last_checked_at"),
+        }
+
+    return json.dumps(result)
+
+
+@mcp.tool()
 async def pipeline_status(run_id: str) -> str:
     """Get current status of a pipeline run.
 
