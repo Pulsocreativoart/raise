@@ -40,6 +40,7 @@ CODEX_ENABLED_TOOLS: list[str] = [
     "pipeline_pause",
     "pipeline_cancel",
     "pipeline_restore",
+    "pipeline_gate_status",
     "pipeline_status",
     "pipeline_runs",
     "pipeline_decision",

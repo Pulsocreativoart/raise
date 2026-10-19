@@ -82,6 +82,7 @@ CHECKOUT_SCOPED_TOOLS: tuple[str, ...] = (
 
 EXEMPT_TOOLS: tuple[str, ...] = (
     # run_id-addressed: shared run state, not checkout state
+    "pipeline_gate_status",
     "pipeline_status",
     "pipeline_runs",
     "pipeline_pause",
